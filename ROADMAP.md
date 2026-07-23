@@ -4,7 +4,7 @@ Rule followed throughout: **a phase can only depend on an earlier phase, never a
 
 Status values used below: Not Started, In Progress, Done, Blocked.
 
-**Current status: Phase 0 done. Phases 1–8 not started.** See the Build
+**Current status: Phases 0–1 done. Phases 2–8 not started.** See the Build
 Log at the bottom of this file for a dated, per-change record of what
 was actually done, including any fixes — the tables below only show
 current status, not history.
@@ -28,19 +28,19 @@ current status, not history.
 
 | Subsection | Status | Notes |
 |---|---|---|
-| Drag-and-drop / file browser upload (.xlsx/.xls) | Not Started | |
-| Auto-detect headers + Smart Header Matching (fuzzy) | Not Started | |
-| Manual column override + fallback manual mapping mode | Not Started | |
-| Raw data preview table | Not Started | |
-| Messy schedule-string parser (time/day/room extraction) | Not Started | Lives in `lib/parsing` — single source of truth, per the dev plan's non-negotiable rule |
-| Multi-session class splitting, 24h time standardization | Not Started | |
-| Time conflict detection + back-to-back room distance warning | Not Started | |
-| Duplicate subject detection | Not Started | |
-| Parsing report + success-rate indicator + auto-suggest fixes | Not Started | |
-| Weekly grid rendering (Mon–Sun × hourly slots) | Not Started | |
-| Smart color assignment (OKLCH/HSL, consistent per subject) | Not Started | |
-| Live "current time" indicator, day summary tooltip | Not Started | Grid polish — kept here since the grid isn't really "done" without it |
-| LocalStorage autosave + crash recovery (local) | Not Started | |
+| Drag-and-drop / file browser upload (.xlsx/.xls) | Done | `features/upload/FileDropzone.tsx` |
+| Auto-detect headers + Smart Header Matching (fuzzy) | Done | `lib/parsing/headerAliasing.ts` — synonym table + Levenshtein fallback (`lib/parsing/levenshtein.ts`) |
+| Manual column override + fallback manual mapping mode | Done | `features/upload/ColumnMappingTable.tsx` — shows the fallback-mode banner via `isMappingEmpty` when nothing auto-matched |
+| Raw data preview table | Done | `features/upload/RawPreviewTable.tsx` |
+| Messy schedule-string parser (time/day/room extraction) | Done | `lib/parsing/scheduleStringParser.ts` — single source of truth, nothing outside `lib/parsing` re-implements it |
+| Multi-session class splitting, 24h time standardization | Done | Same file — comma/semicolon segments + multi-day tokens each become their own `ClassSession`; `lib/parsing/timeUtils.ts` handles 24h conversion |
+| Time conflict detection + back-to-back room distance warning | Done | `lib/parsing/conflicts.ts`; overlaps render red on the grid (`features/grid/GridBlock.tsx`), room-distance warnings surface in `features/grid/ConflictsPanel.tsx` |
+| Duplicate subject detection | Done | Also in `lib/parsing/conflicts.ts`, surfaced in `ConflictsPanel.tsx` |
+| Parsing report + success-rate indicator + auto-suggest fixes | Done | `features/upload/ParseReportPanel.tsx` + per-issue `suggestion` field from the parser |
+| Weekly grid rendering (Mon–Sun × hourly slots) | Done | `features/grid/WeeklyGrid.tsx` — only shows days that actually have classes, falls back to Mon–Fri |
+| Smart color assignment (OKLCH/HSL, consistent per subject) | Done | `lib/parsing/colors.ts` — deterministic hash → hue, golden-angle spacing; colorblind-safe palette function included but not yet wired to a UI toggle (that's Phase 4) |
+| Live "current time" indicator, day summary tooltip | Done | `hooks/useCurrentTime.ts` + `WeeklyGrid.tsx` (red line + hover tooltip on day header) |
+| LocalStorage autosave + crash recovery (local) | Done | `store/index.ts` — Zustand `persist` middleware, autosaves on every state change, rehydrates on reload |
 
 ---
 
@@ -141,34 +141,33 @@ current status, not history.
 
 ## Folder layout — current build status
 
-Based on the dev plan v2 file structure. Phase 0 created every folder
-below (with `.gitkeep` placeholders where empty); folders are annotated
-with the phase that will first populate them with real code, so this
-doubles as a build-order map.
+Folders below are annotated with the phase that first populates them, so
+this doubles as a build-order map. Phases 0 and 1 are done — see the
+Build Log for exactly which files landed in each.
 
 ```
 timetable-orchestrator/
 ├── src/
 │   ├── features/
-│   │   ├── upload/         # Phase 1 — folder created, empty
-│   │   ├── grid/            # Phase 1 — folder created, empty
+│   │   ├── upload/         # Phase 1 — done (FileDropzone, ColumnMappingTable, RawPreviewTable, ParseReportPanel, UploadFlow)
+│   │   ├── grid/            # Phase 1 — done (WeeklyGrid, GridBlock, ConflictsPanel)
 │   │   ├── analytics/       # Phase 3 — folder created, empty
 │   │   ├── export/          # Phase 5 — folder created, empty
 │   │   ├── sharing/         # Phase 7 — folder created, empty
 │   │   └── auth/            # Phase 6 — folder created, empty
-│   ├── store/                # Phase 0 — skeleton created (src/store/index.ts) → slices filled in by Phases 1, 2, 6
+│   ├── store/                # Phase 0 skeleton → Phase 1 added scheduleSlice.ts + persist middleware → Phases 2, 6 add more slices
 │   ├── lib/
 │   │   ├── supabase/         # Phase 6 — folder created, empty
-│   │   ├── parsing/          # Phase 1 — folder created, empty
+│   │   ├── parsing/          # Phase 1 — done (headerAliasing, scheduleStringParser, conflicts, colors, parseFile, timeUtils, levenshtein)
 │   │   ├── export/           # Phase 5 — folder created, empty
 │   │   └── nlp/              # Phase 8 — folder created, empty
-│   ├── hooks/                # folder created, empty — introduced as needed, first likely in Phase 1
-│   ├── types/                # Phase 0 — base types created (src/types/index.ts) → extended every phase
-│   └── pages/                # Phase 1 (main view) → extended in Phase 7 (public view) — folder created, empty
+│   ├── hooks/                # Phase 1 — useCurrentTime.ts
+│   ├── types/                # Phase 0 base types → Phase 1 added the full parsing/grid data model
+│   └── pages/                # Phase 1 — HomePage.tsx (main view) → extended in Phase 7 (public view)
 ├── supabase/
 │   ├── migrations/           # Phase 6 — folder created, empty
 │   └── functions/            # Not planned unless a future feature needs a real secret — see dev plan §10
-└── package.json               # Phase 0 — done, unverified (see Build Log)
+└── package.json               # Phase 0 scaffold, Phase 1 added `xlsx` — done, unverified (see Build Log)
 ```
 
 ---
@@ -188,6 +187,104 @@ The natural "first real milestone" is the end of Phase 1: a working, local-only 
 Dated, append-only record of what actually happened: code added, bugs
 fixed, decisions made. The phase tables above show current status only;
 this is the history. Newest entry on top.
+
+### 2026-07-23 — Dependency security fixes
+
+**Changed:**
+- `xlsx` pinned to SheetJS's CDN-hosted 0.20.3 build
+  (`https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`) instead of
+  the unmaintained npm 0.18.5, fixing prototype pollution + ReDoS
+  (GHSA-4r6h-8v6p-xvw6, GHSA-5pgg-2g8v-p4x9). No fix was ever
+  published to the npm registry for this range. `npm audit` can no
+  longer track this dependency for future CVEs since it's not
+  registry-sourced — check cdn.sheetjs.com periodically for newer
+  patched versions.
+- `vite` bumped `^5.4.21` → `^6.0.0`, `@vitejs/plugin-react` → `^5.0.0`,
+  to pull in `esbuild >=0.25.0` (GHSA-67mh-4wv8-2f99, a dev-server-only
+  CORS issue — not shipped to users, doesn't affect `npm run build`
+  output). Deliberately targeted Vite 6 rather than the Vite 8 that
+  `npm audit fix --force` defaults to, since Vite 8 swaps the bundler
+  engine (Rolldown/Oxc) and is a much bigger migration than this fix
+  needed.
+- `npm audit`: 0 vulnerabilities (down from 1 high + 2 moderate).
+
+**Known gaps / deferred, not bugs:**
+- Dev server and production build not yet re-verified after the Vite
+  5→6 bump — run `npm run dev` and `npm run build` before trusting
+  this fully, same verification gap noted in Phase 0/1 above.
+
+### 2026-07-23 — Phase 1: Core Local Experience
+
+**Added:**
+- Data model in `src/types/index.ts`: `RawRow`, `RequiredField`,
+  `ColumnMapping`, `ClassSession`, `ParsedClass`, `ParseIssue`,
+  `ParseReport`, `ConflictWarning` — shaped to match the `classes` /
+  `class_sessions` tables in `PROJECT.md` §3 so Phase 6 cloud sync won't
+  need a data-model migration later
+- `lib/parsing/` (the single source of truth for parsing, per
+  `PROJECT.md` §9 rule 3):
+  - `levenshtein.ts` — edit distance for typo-tolerant header matching
+  - `headerAliasing.ts` — synonym table per field, normalizes headers
+    (case/periods/underscores/spaces stripped), exact match first then
+    fuzzy fallback; `isMappingEmpty` drives the fallback manual-mapping UI
+  - `scheduleStringParser.ts` — parses comma/semicolon-separated
+    segments like `"1-2:30 pm TTh, 2-4 pm F CCMS-RM-04"` into
+    `ClassSession[]`; case-insensitive day-code tokenizer (longest-match
+    first: `Th`/`Su` before bare `T`/`S`); meridiem-inheritance heuristic
+    for shorthand like `"1-2:30 pm"` where only the end time states AM/PM
+  - `timeUtils.ts` — 24h time standardization + display formatting
+  - `conflicts.ts` — time-overlap, back-to-back different-building
+    room-distance warning, and duplicate-subject-code detection, all as
+    one pure function over the parsed classes
+  - `colors.ts` — deterministic OKLCH pastel color per subject code
+    (hash → hue, golden-angle spacing so hues don't cluster); includes a
+    3-color colorblind-safe palette function, not yet wired to a toggle
+  - `parseFile.ts` — reads the uploaded workbook (`xlsx`/SheetJS),
+    guesses the column mapping, and builds `ParsedClass[]` + a
+    `ParseReport` from the (possibly user-corrected) mapping
+- `store/scheduleSlice.ts` — upload/mapping/parsed-classes state and the
+  actions driving the upload flow; `store/index.ts` rewritten to wrap
+  the combined store in Zustand's `persist` middleware (LocalStorage
+  autosave + reload-time crash recovery)
+- `hooks/useCurrentTime.ts` — minute-granularity clock for the grid's
+  live time indicator, without re-rendering every second
+- `features/upload/`: `FileDropzone`, `ColumnMappingTable`,
+  `RawPreviewTable`, `ParseReportPanel`, and `UploadFlow` tying them
+  together against the store
+- `features/grid/`: `WeeklyGrid` (day/hour layout, only renders days
+  that actually have classes, current-time line, hover tooltip with
+  per-day hours/class-count/subjects), `GridBlock` (red border on
+  time-overlap conflicts), `ConflictsPanel` (room-distance and
+  duplicate-subject warnings, which aren't visual grid overlaps)
+- `pages/HomePage.tsx` assembling the above; `App.tsx` now renders it
+- Added `xlsx` to `package.json` dependencies
+
+**Fixed:**
+- `scheduleStringParser.ts`'s day-code tokenizer originally did a
+  case-sensitive character match (`'M'`, `'T'`, `'Th'`, ...), so
+  lowercase input like `"mwf"` or `"tth"` silently failed to parse.
+  Caught before packaging and rewrote it to lowercase the token first.
+- `UploadFlow.tsx` initially selected four store fields as one object
+  literal from `useStore`, which is a known Zustand re-render smell
+  (returns a new object every call, defeats reference-equality
+  bail-out). Changed to four separate `useStore` selector calls.
+
+**Known gaps / deferred, not bugs:**
+- Still unverified end-to-end — same network restriction as Phase 0
+  (no `npm install` run in the build sandbox). Run `npm install && npm
+  run dev`, then upload a real sheet, before trusting this fully.
+- The schedule-string parser is a heuristic tuned to the formats in
+  `FEATURES.md`'s own examples (e.g. `"1-2:30 pm TTh, 2-4 pm F
+  CCMS-RM-04"`), not a full grammar. Rows it can't confidently parse
+  are reported in the Parse Report with a reason and, where possible, a
+  suggested fix — not silently dropped or guessed.
+- Colorblind-safe palette exists in `colors.ts` but has no toggle yet —
+  that UI lands in Phase 4 per the roadmap; noted so it isn't mistaken
+  for a Phase 1 gap.
+- Room-distance warnings are heuristic (same-day, back-to-back,
+  different building-code string) — there's no real distance/travel-time
+  calculation, matching the original feature description's own framing
+  of it as a warning, not a guarantee.
 
 ### 2026-07-22 — Phase 0 scaffolding
 
