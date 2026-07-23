@@ -213,6 +213,37 @@ Dated, append-only record of what actually happened: code added, bugs
 fixed, decisions made. The phase tables above show current status only;
 this is the history. Newest entry on top.
 
+### 2026-07-23 — Thursday sessions silently dropped (`lib/parsing/scheduleStringParser.ts`)
+
+**Found:**
+- `SEGMENT_RE`'s day-token character class — `[MTWFSUmtwfsu]` — does not
+  include `H`/`h`. Since the class quantifier (`+`) stops at the first
+  character it doesn't match, any day token containing `Th` (`"TTh"`,
+  `"MWTh"`, `"MThF"`, or bare `"Th"`) gets cut short: only the letters
+  before the `h` are captured in the day-token group, and the stray `h`
+  spills into the trailing `rest` group instead.
+- Confirmed with `"1-2:30 pm TTh"`: day-token group captures `"TT"`
+  (not `"TTh"`), and `rest` captures `"h"` instead of `""`.
+- Downstream effect in `parseDayTokens("TT")`: produces `['Tue', 'Tue']`
+  — Tuesday is duplicated and Thursday is never generated, so any
+  Thursday session for a `Th`-containing class never reaches the grid.
+- Secondary effect: the leaked `"h"` gets passed into
+  `splitBuildingRoom()` as (or prepended to) the room string, so the
+  room field for that segment can also come out wrong.
+- Plain day tokens without `Th` (e.g. `"MWF"`) are unaffected — this is
+  specific to any combination that includes the two-letter `Th` code.
+- Root cause is isolated to the regex character class only —
+  `parseDayTokens()`'s own `"th"` two-character lookahead logic is
+  already correct and needs no change.
+
+**Fixed:**
+- Added `H`/`h` to `SEGMENT_RE`'s day-token character class:
+  `[MTWFSUHmtwfsuh]+` (or, since the regex already has the `i` flag,
+  just `[MTWFSUH]+`). Verified via standalone regex test that this
+  correctly captures `"TTh"` and `"Th"` in full and leaves `rest`
+  clean (e.g. room text like `"CCMS-RM-04"` no longer gets a leaked
+  `h` prefix).
+
 ### 2026-07-23 — Header-row detection fix (`lib/parsing/parseFile.ts`, `lib/parsing/headerAliasing.ts`)
 
 **Fixed:**

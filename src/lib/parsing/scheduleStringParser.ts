@@ -86,7 +86,7 @@ function splitBuildingRoom(text: string): {
 
 const TIME = String.raw`(\d{1,2})(?::(\d{2}))?\s*(am|pm)?`;
 const SEGMENT_RE = new RegExp(
-  `^\\s*${TIME}\\s*-\\s*${TIME}\\s+([MTWFSUmtwfsu]+)\\s*(.*)$`,
+  `^\\s*${TIME}\\s*-\\s*${TIME}\\s+([MTWFSUHmtwfsuh]+)\\s*(.*)$`,
   'i',
 );
 
@@ -145,9 +145,8 @@ function parseSegment(segment: string): SegmentParseResult {
   if (endMinutes <= startMinutes) {
     return {
       sessions: [],
-      error: `Parsed end time is not after start time (${startHourStr}${
-        startMinStr ? ':' + startMinStr : ''
-      } -> ${endHourStr}${endMinStr ? ':' + endMinStr : ''})`,
+      error: `Parsed end time is not after start time (${startHourStr}${startMinStr ? ':' + startMinStr : ''
+        } -> ${endHourStr}${endMinStr ? ':' + endMinStr : ''})`,
       suggestion: 'Double check AM/PM on the start and end time.',
     };
   }
