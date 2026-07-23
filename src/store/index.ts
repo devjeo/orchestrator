@@ -1,23 +1,32 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { type ScheduleSlice, createScheduleSlice } from './scheduleSlice';
 
 /**
- * Store skeleton (Phase 0).
- *
- * This app uses the Zustand "slice pattern": each feature phase adds its
- * own slice file (e.g. `scheduleSlice.ts`, `historySlice.ts`, `syncSlice.ts`)
- * that exports a `StateCreator<StoreState, [], [], SliceShape>`, and this
- * file combines them with `...createXSlice(...)`.
+ * Combined store using the Zustand "slice pattern": each feature phase
+ * adds its own slice file and this file merges them.
  *
  * Planned slices (not yet created):
- *   - scheduleSlice   (Phase 1) — parsed classes/sessions, the core data model
- *   - historySlice     (Phase 2) — undo/redo stack
- *   - editSlice         (Phase 2) — manual field edits, custom events
- *   - syncSlice         (Phase 6) — debounced Supabase sync, optimistic concurrency
+ *   - historySlice (Phase 2) — undo/redo stack
+ *   - editSlice     (Phase 2) — manual field edits, custom events
+ *   - syncSlice     (Phase 6) — debounced Supabase sync, optimistic concurrency
  *
- * StoreState is intentionally empty until Phase 1 defines the first slice.
+ * `persist` gives Phase 1's "LocalStorage autosave + crash recovery":
+ * every state change is written to LocalStorage automatically, and
+ * `useStore.persist.hasHydrated()` (used in App.tsx) tells the UI when
+ * the last saved state has been restored on load.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface StoreState {}
+export type StoreState = ScheduleSlice;
 
-export const useStore = create<StoreState>()(() => ({}));
+export const useStore = create<StoreState>()(
+  persist(
+    (...args) => ({
+      ...createScheduleSlice(...args),
+    }),
+    {
+      name: 'timetable-orchestrator-store',
+      storage: createJSONStorage(() => localStorage),
+    },
+  ),
+);
