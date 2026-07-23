@@ -213,6 +213,67 @@ Dated, append-only record of what actually happened: code added, bugs
 fixed, decisions made. The phase tables above show current status only;
 this is the history. Newest entry on top.
 
+### 2026-07-24 — GridBlock / WeeklyGrid redesign
+
+**Changed:**
+- `features/grid/GridBlock.tsx` — subject title (`cls.subjectTitle`) and
+  instructor (`cls.instructorName`) are now rendered in the block body
+  itself (progressive disclosure by block height), not just exposed via
+  the hover tooltip as before.
+- Visual redesign of the block from a solid `cls.colorHex`-filled card to
+  a white (`--paper-raised`) card with a colored left accent bar
+  (`--accent`, 3px), matching the existing `.card-tab` pattern. Fixes a
+  real contrast risk: arbitrary per-subject hex colors as a full
+  background have no guaranteed contrast against fixed text color, e.g.
+  pale subject colors with light text; text now always sits on a fixed
+  paper background using the `--ink-900/700/500/300` scale.
+- All sizing/color/shadow/font values pulled from existing design tokens
+  (`--radius-sm`, `--shadow-sm`, `--line`, `--font-mono`) instead of
+  hardcoded hex/px, so the block matches the rest of the app.
+- Conflict indicator changed from a heavy 2px full-border treatment to a
+  rose-tinted top/right/bottom border plus a small corner dot — reads as
+  a status flag rather than a stress signal.
+- Removed the time range from the block body — `WeeklyGrid`'s time axis
+  already conveys this via block position, so repeating it was
+  redundant. Time remains in the hover tooltip.
+- Title overflow: replaced single-line ellipsis truncation with
+  `-webkit-line-clamp: 2` (`.gridblock__title`) so long titles wrap to a
+  second line before truncating, instead of cutting off after a few
+  characters.
+- Inline styles removed from both `GridBlock.tsx` and `WeeklyGrid.tsx` in
+  favor of classes in `index.css`, matching the existing `.card`/`.btn`/
+  `.badge` convention. Only genuinely per-instance values remain inline:
+  `top`/`height` (block position/size), `--accent` (per-class color) in
+  `GridBlock`; `top`/`height` for hour marks, track height, and the
+  now-line in `WeeklyGrid`.
+- `WeeklyGrid`'s day-header tooltip converted from `useState` +
+  `onMouseEnter`/`onMouseLeave` to a pure CSS `:hover` reveal
+  (`.day-header__tooltip`), removing a re-render on every mouse move.
+- Room re-laid-out into a header row next to the subject code
+  (`.gridblock__header`, code left / room right) instead of being pinned
+  to the block bottom behind a `height >= 78px` gate. The old gate meant
+  room silently never appeared on any short/typical-height block —
+  moving it into the always-rendered header row fixes that. Code
+  truncates first under space pressure (`min-width: 0` +
+  `text-overflow: ellipsis`) so room, the shorter fixed-width string,
+  stays fully visible.
+- Title/instructor disclosure thresholds adjusted (30px / 52px) now that
+  the header row is a fixed, always-present element above them.
+
+**Fixed:**
+- Subject title overflow cutting off mid-word on short/medium blocks
+  (single-line ellipsis → 2-line clamp, see above).
+- Room label not rendering on the majority of real-world blocks because
+  it was gated behind an 78px height threshold most sessions never
+  reach — moved into the always-visible header row.
+
+**Known gaps / deferred, not bugs:**
+- `ParsedClass` type must have `instructorName` for this to type-check;
+  not yet confirmed present on the type definition in `src/types/index.ts`.
+- Still unverified in a running dev server — same standing verification
+  gap noted throughout this log (no `npm install`/`npm run dev` in the
+  build sandbox).
+
 ### 2026-07-23 — Thursday sessions silently dropped (`lib/parsing/scheduleStringParser.ts`)
 
 **Found:**

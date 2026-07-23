@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { ConflictWarning, DayOfWeek, ParsedClass } from '@/types';
 import { formatMinutes } from '@/lib/parsing';
 import { useCurrentTime } from '@/hooks/useCurrentTime';
@@ -15,7 +15,6 @@ interface WeeklyGridProps {
 }
 
 export function WeeklyGrid({ classes, conflicts }: WeeklyGridProps) {
-  const [hoveredDay, setHoveredDay] = useState<DayOfWeek | null>(null);
   const { dayIndex, minutes: nowMinutes } = useCurrentTime();
 
   const conflictedClassIds = useMemo(() => {
@@ -88,28 +87,23 @@ export function WeeklyGrid({ classes, conflicts }: WeeklyGridProps) {
 
   if (classes.length === 0) {
     return (
-      <p style={{ color: '#64748b' }}>
+      <p className="weekly-grid__empty">
         No schedule to show yet — upload a file above to generate your grid.
       </p>
     );
   }
 
   return (
-    <div style={{ display: 'flex', overflowX: 'auto' }}>
+    <div className="weekly-grid">
       {/* time axis */}
-      <div style={{ width: 56, flexShrink: 0 }}>
-        <div style={{ height: 32 }} />
-        <div style={{ position: 'relative', height: gridHeight }}>
+      <div className="time-axis">
+        <div className="time-axis__header-spacer" />
+        <div className="time-axis__track" style={{ height: gridHeight }}>
           {hourMarks.map((m) => (
             <div
               key={m}
-              style={{
-                position: 'absolute',
-                top: (m - rangeStart) * PX_PER_MINUTE - 7,
-                right: 6,
-                fontSize: 11,
-                color: '#94a3b8',
-              }}
+              className="time-axis__label"
+              style={{ top: (m - rangeStart) * PX_PER_MINUTE - 7 }}
             >
               {formatMinutes(m)}
             </div>
@@ -121,56 +115,17 @@ export function WeeklyGrid({ classes, conflicts }: WeeklyGridProps) {
       {visibleDays.map((day) => {
         const summary = daySummaries.get(day)!;
         return (
-          <div key={day} style={{ flex: 1, minWidth: 120 }}>
-            <div
-              onMouseEnter={() => setHoveredDay(day)}
-              onMouseLeave={() => setHoveredDay(null)}
-              style={{
-                height: 32,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: 13,
-                position: 'relative',
-                cursor: 'default',
-                borderBottom: '2px solid #e2e8f0',
-              }}
-            >
+          <div key={day} className="day-column">
+            <div className="day-header">
               {day}
-              {hoveredDay === day && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: '#1e293b',
-                    color: 'white',
-                    padding: '0.4rem 0.6rem',
-                    borderRadius: 6,
-                    fontSize: 12,
-                    fontWeight: 400,
-                    whiteSpace: 'nowrap',
-                    zIndex: 10,
-                  }}
-                >
-                  {summary.totalHours.toFixed(1)}h · {summary.classCount} class
-                  {summary.classCount === 1 ? '' : 'es'} ·{' '}
-                  {summary.subjects.join(', ') || 'none'}
-                </div>
-              )}
+              <div className="day-header__tooltip">
+                {summary.totalHours.toFixed(1)}h · {summary.classCount} class
+                {summary.classCount === 1 ? '' : 'es'} ·{' '}
+                {summary.subjects.join(', ') || 'none'}
+              </div>
             </div>
 
-            <div
-              style={{
-                position: 'relative',
-                height: gridHeight,
-                borderLeft: '1px solid #f1f5f9',
-                background:
-                  'repeating-linear-gradient(to bottom, transparent, transparent 59px, #f8fafc 59px, #f8fafc 60px)',
-              }}
-            >
+            <div className="day-column__track" style={{ height: gridHeight }}>
               {classes.flatMap((cls) =>
                 cls.sessions
                   .filter((s) => s.day === day)
@@ -191,15 +146,8 @@ export function WeeklyGrid({ classes, conflicts }: WeeklyGridProps) {
 
               {showNowLine && day === todayLabel && (
                 <div
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: (nowMinutes - rangeStart) * PX_PER_MINUTE,
-                    height: 2,
-                    background: 'rgba(220, 38, 38, 0.6)',
-                    zIndex: 5,
-                  }}
+                  className="now-line"
+                  style={{ top: (nowMinutes - rangeStart) * PX_PER_MINUTE }}
                 />
               )}
             </div>
