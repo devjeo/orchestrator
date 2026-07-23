@@ -106,7 +106,7 @@ current status, not history.
 
 | Subsection | Status | Notes |
 |---|---|---|
-| PNG export (`html-to-image`) | Not Started | |
+| PNG export (`html-to-image`) | Done | `lib/export/exportPng.ts` + `features/export/ExportPngButton.tsx`; `features/grid/WeeklyGrid.tsx` converted to `forwardRef` to expose the capture target |
 | Print-ready PDF export (print-CSS primary, `html2canvas`+`jsPDF` fallback) | Not Started | Per the dev plan's recommendation |
 | .ics (iCal) export | Not Started | |
 | Batch export (ZIP of your own multiple semester files) | Not Started | Sequential generation with progress, not all-at-once |
@@ -212,6 +212,41 @@ The natural "first real milestone" is the end of Phase 1: a working, local-only 
 Dated, append-only record of what actually happened: code added, bugs
 fixed, decisions made. The phase tables above show current status only;
 this is the history. Newest entry on top.
+
+### 2026-07-24 — Phase 5: PNG export
+
+**Added:**
+- `lib/export/exportPng.ts` — `exportGridAsPng(node, options)`, wraps
+  `html-to-image`'s `toPng` and triggers a browser download. Strips
+  live-state UI that shouldn't appear in a static snapshot (the
+  current-time `now-line`, the day-header hover tooltip) via `toPng`'s
+  `filter` option. Defaults to a `--paper`-matching background (so
+  transparent regions don't render black on open), 2x pixel ratio for
+  retina-quality output, and a `schedule-YYYY-MM-DD.png` filename.
+- `features/export/ExportPngButton.tsx` — button with idle / exporting /
+  error states, styled with the existing `.btn`/`.btn-secondary`
+  classes; shows a small rose error dot on failure rather than a
+  blocking alert.
+- `features/grid/WeeklyGrid.tsx` converted from a plain function
+  component to `forwardRef<HTMLDivElement, WeeklyGridProps>` so the
+  export button can capture its exact rendered DOM node directly,
+  without a separate hidden-clone render pass. No behavior change to
+  the component itself.
+- New `.export-toolbar` / `.export-btn__error-dot` styles in
+  `index.css`, following the existing token-based convention.
+
+**Known gaps / deferred, not bugs:**
+- `html-to-image` needs to be added to `package.json` dependencies —
+  not done here since `package.json` wasn't available in this working
+  session; add it before running `npm install`.
+- Not yet wired into `pages/HomePage.tsx` — that file wasn't available
+  in this session either. Wire-up is: create a ref via
+  `useRef<HTMLDivElement>(null)`, pass it to `<WeeklyGrid ref={...} />`,
+  and render `<ExportPngButton targetRef={ref} />` alongside it (e.g.
+  inside an `.export-toolbar` wrapper above or below the grid).
+- Standing verification gap continues — untested against a running dev
+  server, same as every phase above.
+- PDF and .ics export (the rest of Phase 5) still Not Started.
 
 ### 2026-07-24 — GridBlock / WeeklyGrid redesign
 

@@ -523,13 +523,6 @@ a {
   border-bottom-color: var(--rose);
 }
 
-.gridblock__header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px;
-}
-
 .gridblock__code {
   font-weight: 700;
   font-size: 12px;
@@ -538,15 +531,6 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
-}
-
-.gridblock__room {
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--ink-300);
-  white-space: nowrap;
 }
 
 .gridblock__title {
@@ -569,6 +553,16 @@ a {
   text-overflow: ellipsis;
 }
 
+.gridblock__room {
+  margin-top: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-300);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .gridblock__conflict-dot {
   position: absolute;
   top: 4px;
@@ -578,4 +572,22 @@ a {
   border-radius: 50%;
   background: var(--rose);
   box-shadow: 0 0 0 2px var(--rose-tint);
+}
+
+/* ---------------------------------------------------------------- */
+/* Export toolbar (Phase 5)                                          */
+/* ---------------------------------------------------------------- */
+.export-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.export-btn__error-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--rose);
+  margin-left: 0.35rem;
 }

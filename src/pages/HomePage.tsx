@@ -3,12 +3,15 @@ import { UploadFlow } from '@/features/upload/UploadFlow';
 import { ParseReportPanel } from '@/features/upload/ParseReportPanel';
 import { WeeklyGrid } from '@/features/grid/WeeklyGrid';
 import { ConflictsPanel } from '@/features/grid/ConflictsPanel';
+import { ExportPngButton } from '@/features/export/ExportPngButton';
+import { useRef } from 'react';
 
 export function HomePage() {
   const classes = useStore((s) => s.classes);
   const parseReport = useStore((s) => s.parseReport);
   const conflicts = useStore((s) => s.conflicts);
-
+  const gridRef = useRef<HTMLDivElement>(null);
+  
   const hasSchedule = classes.length > 0;
 
   return (
@@ -33,7 +36,10 @@ export function HomePage() {
       {hasSchedule && (
         <>
           <ConflictsPanel conflicts={conflicts} />
-          <WeeklyGrid classes={classes} conflicts={conflicts} />
+          <div className="export-toolbar">
+            <ExportPngButton targetRef={gridRef} />
+          </div>
+          <WeeklyGrid ref={gridRef} classes={classes} conflicts={conflicts} />
         </>
       )}
     </main>
