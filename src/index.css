@@ -1,11 +1,393 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* ---------------------------------------------------------------- */
+/* Design tokens                                                    */
+/* ---------------------------------------------------------------- */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
+
+  /* Palette — "ruled planner": warm paper, ink, highlighter amber,
+     ledger teal for secondary actions, and warm status colors. */
+  --paper: #faf8f2;
+  --paper-raised: #ffffff;
+  --ink-900: #1d2233;
+  --ink-700: #383f54;
+  --ink-500: #5b6478;
+  --ink-300: #9098ab;
+  --line: #e4dfd3;
+  --line-strong: #d3ccb9;
+
+  --amber: #e8a63d;
+  --amber-deep: #c9861f;
+  --amber-tint: #fbf0dc;
+
+  --teal: #2f6f62;
+  --teal-tint: #e4efec;
+
+  --rose: #c4453d;
+  --rose-tint: #fbe9e7;
+
+  --sage: #5e8f66;
+  --sage-tint: #e9f1e8;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 1px 2px rgba(29, 34, 51, 0.06);
+  --shadow-md: 0 4px 16px rgba(29, 34, 51, 0.08);
+  --shadow-lg: 0 12px 32px rgba(29, 34, 51, 0.12);
+
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
 }
 
+/* ---------------------------------------------------------------- */
+/* Base                                                              */
+/* ---------------------------------------------------------------- */
 * {
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink-900);
+  background-color: var(--paper);
+  /* Signature texture: a faint ledger grid, echoing the weekly grid
+     that's the whole point of the app. Kept subtle — a floor, not a
+     decoration competing with real content. */
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink-900);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+code, .mono {
+  font-family: var(--font-mono);
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--teal);
+}
+
+:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* Layout                                                            */
+/* ---------------------------------------------------------------- */
+.shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .shell {
+    padding: 1.5rem 1rem 4rem;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* App header                                                        */
+/* ---------------------------------------------------------------- */
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: var(--teal-tint);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+}
+
+.eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+}
+
+.app-title {
+  font-size: clamp(1.7rem, 3vw, 2.35rem);
+}
+
+.app-subtitle {
+  color: var(--ink-500);
+  font-size: 0.98rem;
+  max-width: 60ch;
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------- */
+/* Cards & panels                                                    */
+/* ---------------------------------------------------------------- */
+.card {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-pad {
+  padding: 1.5rem;
+}
+
+.card-tab {
+  border-left: 3px solid var(--amber);
+}
+
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.section-heading h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.section-hint {
+  font-size: 0.8rem;
+  color: var(--ink-300);
+}
+
+/* ---------------------------------------------------------------- */
+/* Buttons                                                           */
+/* ---------------------------------------------------------------- */
+.btn {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1.1rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.btn-primary {
+  background: var(--amber);
+  color: var(--ink-900);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--amber-deep);
+  color: #fff;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--ink-500);
+  border-color: var(--line-strong);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--paper);
+  color: var(--ink-900);
+  border-color: var(--ink-300);
+}
+
+/* ---------------------------------------------------------------- */
+/* Badges / alerts                                                   */
+/* ---------------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+}
+
+.badge-amber { background: var(--amber-tint); color: var(--amber-deep); }
+.badge-teal  { background: var(--teal-tint);  color: var(--teal); }
+.badge-rose  { background: var(--rose-tint);  color: var(--rose); }
+.badge-sage  { background: var(--sage-tint);  color: var(--sage); }
+
+.alert {
+  border-radius: var(--radius-md);
+  padding: 0.8rem 1rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+
+.alert-error {
+  background: var(--rose-tint);
+  color: #7a2b26;
+  border: 1px solid rgba(196, 69, 61, 0.25);
+}
+
+/* ---------------------------------------------------------------- */
+/* Dropzone                                                          */
+/* ---------------------------------------------------------------- */
+.dropzone {
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--paper-raised);
+  padding: 3rem 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+}
+
+.dropzone:hover,
+.dropzone.is-active {
+  border-color: var(--amber);
+  background: var(--amber-tint);
+}
+
+.dropzone-icon {
+  width: 40px;
+  height: 40px;
+  color: var(--amber-deep);
+}
+
+.dropzone-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.dropzone-hint {
+  color: var(--ink-500);
+  font-size: 0.85rem;
+}
+
+.format-chip {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  color: var(--ink-500);
+}
+
+/* ---------------------------------------------------------------- */
+/* Tables (raw preview / column mapping wrapper)                     */
+/* ---------------------------------------------------------------- */
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.table-scroll table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.table-scroll th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-500);
+  background: var(--paper);
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.table-scroll td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  color: var(--ink-700);
+}
+
+.table-scroll tr:last-child td {
+  border-bottom: none;
 }

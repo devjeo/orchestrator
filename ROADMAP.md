@@ -188,6 +188,82 @@ Dated, append-only record of what actually happened: code added, bugs
 fixed, decisions made. The phase tables above show current status only;
 this is the history. Newest entry on top.
 
+### 2026-07-23 — Upload UI polish (FileDropzone, ParseReportPanel, RawPreviewTable, ColumnMappingTable)
+
+**Changed** (presentation-only, no prop/type changes):
+- `features/upload/FileDropzone.tsx` — swapped inline styles for the
+  existing `.dropzone` / `.format-chip` / `.alert-error` classes from
+  `index.css`, added an upload icon, a "Loaded <filename>" confirmation
+  once a file is accepted, and a more specific rejection message that
+  names the bad file and restates the accepted formats.
+- `features/upload/ParseReportPanel.tsx` — success rate now renders as
+  a color-coded `.badge` (sage/amber/rose) instead of an inline hex
+  color; the issues list reuses the shared `.alert-error` box; added an
+  explicit "every row parsed cleanly" message for the zero-issues case
+  instead of just rendering nothing.
+- `features/upload/RawPreviewTable.tsx` — switched to the shared
+  `.table-scroll` styling instead of duplicating table CSS inline;
+  added a leading row-number column (`Row N`) that lines up with the
+  row numbering `ParseReportPanel` already uses, so a flagged row is
+  easy to find in the preview; added an explicit empty state instead
+  of rendering a headerless table before a file is loaded.
+- `features/upload/ColumnMappingTable.tsx` — mandatory fields left
+  unmapped are now highlighted (rose background + border), not just
+  marked with `*`; "not used" columns render as `.badge-teal` chips
+  instead of a comma-joined string; the fallback-mode banner now uses
+  the existing amber tokens (`--amber` / `--amber-tint`) instead of
+  one-off hex values.
+
+**Not changed:**
+- `index.css` untouched, per request — all four components consume its
+  existing tokens/classes rather than adding new global CSS.
+- No changes to `@/types` or `@/lib/parsing` — `ColumnMapping`,
+  `ParseReport`, `RawRow`, `RequiredField`, `isMappingEmpty`, etc. are
+  all unaffected.
+
+**Follow-up to:**
+- Closes the gap flagged in the "Visual Design Pass" entry below, which
+  had applied the new `index.css` classes to `HomePage`/`UploadFlow`
+  but explicitly left `RawPreviewTable`, `ColumnMappingTable`, and
+  `ParseReportPanel` unstyled.
+
+### 2026-07-23 — Visual Design Pass (index.css, HomePage.tsx, UploadFlow.tsx)
+
+**Changed:**
+- `src/index.css` — replaced the Phase 0 scaffold stub (just
+  `color-scheme`, `box-sizing`, and a `body` margin reset) with a full
+  design-token system: a warm "ruled planner" palette (paper/ink/amber/
+  teal/rose/sage), `Fraunces` + `Inter` + `IBM Plex Mono` via Google
+  Fonts, a subtle ledger-grid background texture on `body` (echoing the
+  weekly grid), and reusable component classes — `.shell`, `.card`/
+  `.card-pad`, `.btn`/`.btn-primary`/`.btn-secondary`, `.badge-*`,
+  `.alert-error`, `.dropzone`, `.format-chip`, `.table-scroll` — plus a
+  `:focus-visible` outline and a `prefers-reduced-motion` override.
+- `pages/HomePage.tsx` — rebuilt to use the new classes instead of no
+  styling at all: `.shell` for the page frame, `.app-header`/
+  `.app-title`/`.app-subtitle`, and an `.eyebrow` badge ("Local-only ·
+  nothing leaves your device") ahead of the `<h1>`.
+- `features/upload/UploadFlow.tsx` — rebuilt to use the new classes
+  instead of local inline-style objects (`primaryButtonStyle`,
+  `secondaryButtonStyle`): `.card`/`.card-pad` wrapping the raw-preview
+  and column-mapping sections, `.row-between`/`.section-heading` for
+  their headers, a `.badge-amber` showing the unmatched-column count,
+  `.alert-error` for the read-error message, `.btn-primary`/
+  `.btn-secondary` for the buttons, and `.format-chip`s for the
+  `.xlsx`/`.xls` format hints under the dropzone.
+- No logic changes in either component — `useStore` selectors, the
+  upload/mapping/generate handlers, and the `canGenerate` gating are
+  unchanged; this pass is styling-only.
+
+**Known gaps / deferred, not bugs:**
+- This is the design pass for the components Phase 1 already shipped
+  (`HomePage`, `UploadFlow`) — the newer classes referenced here
+  (`.badge-*`, `.alert-*`, `.table-scroll`, etc.) aren't yet applied to
+  the rest of Phase 1's components (`RawPreviewTable`,
+  `ColumnMappingTable`, `ParseReportPanel`, the grid components). Worth
+  a follow-up pass so the whole app matches, rather than assuming it
+  already does.
+
 ### 2026-07-23 — Dependency security fixes
 
 **Changed:**

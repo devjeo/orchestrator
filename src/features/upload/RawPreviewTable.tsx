@@ -11,50 +11,49 @@ export function RawPreviewTable({
   rows,
   maxRows = 8,
 }: RawPreviewTableProps) {
+  if (headers.length === 0 || rows.length === 0) {
+    return (
+      <p style={{ color: 'var(--ink-500)', fontSize: 14 }}>
+        No rows to show yet — upload a schedule file to see a preview here.
+      </p>
+    );
+  }
+
   const preview = rows.slice(0, maxRows);
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-        <thead>
-          <tr>
-            {headers.map((h) => (
-              <th
-                key={h}
-                style={{
-                  textAlign: 'left',
-                  borderBottom: '2px solid #e2e8f0',
-                  padding: '0.4rem 0.6rem',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {preview.map((row, i) => (
-            <tr key={i}>
+    <div className="stack">
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'right' }}>#</th>
               {headers.map((h) => (
-                <td
-                  key={h}
-                  style={{
-                    borderBottom: '1px solid #f1f5f9',
-                    padding: '0.4rem 0.6rem',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {String(row[h] ?? '')}
-                </td>
+                <th key={h}>{h}</th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {preview.map((row, i) => (
+              <tr key={i}>
+                <td
+                  className="mono"
+                  style={{ textAlign: 'right', color: 'var(--ink-300)' }}
+                >
+                  {i + 2}
+                </td>
+                {headers.map((h) => (
+                  <td key={h}>{String(row[h] ?? '')}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {rows.length > maxRows && (
-        <p style={{ color: '#64748b', fontSize: 13, marginTop: 8 }}>
-          Showing {maxRows} of {rows.length} rows.
+        <p style={{ color: 'var(--ink-500)', fontSize: 13 }}>
+          Showing the first {maxRows} of {rows.length} rows. The rest still
+          get parsed — this is just a preview.
         </p>
       )}
     </div>

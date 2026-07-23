@@ -12,22 +12,17 @@ export function HomePage() {
   const hasSchedule = classes.length > 0;
 
   return (
-    <main
-      style={{
-        fontFamily: 'system-ui, sans-serif',
-        maxWidth: 1100,
-        margin: '0 auto',
-        padding: '2rem 1.5rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1.5rem',
-      }}
-    >
-      <header>
-        <h1 style={{ marginBottom: 4 }}>Smart Academic Timetable Orchestrator</h1>
-        <p style={{ color: '#64748b', margin: 0 }}>
-          Upload your schedule, fix the mapping if needed, and see it laid
-          out as a grid — all in your browser, nothing leaves your device.
+    <main className="shell">
+      <header className="app-header">
+        <span className="eyebrow">
+          <span className="eyebrow-dot" aria-hidden="true" />
+          Local-only · nothing leaves your device
+        </span>
+        <h1 className="app-title">Smart Academic Timetable Orchestrator</h1>
+        <p className="app-subtitle">
+          Upload your schedule, fix the column mapping if something's
+          guessed wrong, and see it laid out as a weekly grid — parsed and
+          rendered entirely in your browser.
         </p>
       </header>
 

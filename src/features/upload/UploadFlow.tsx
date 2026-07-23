@@ -37,83 +37,77 @@ export function UploadFlow() {
     }
   };
 
+  const canGenerate = Boolean(mapping?.subjectCode && mapping?.scheduleString);
+
   if (headers.length === 0) {
     return (
-      <div>
+      <div className="stack">
         <FileDropzone onFileSelected={handleFileSelected} isLoading={isLoading} />
+
+        <div className="row" style={{ justifyContent: 'center' }}>
+          <span className="format-chip">.xlsx</span>
+          <span className="format-chip">.xls</span>
+        </div>
+
         {readError && (
-          <p role="alert" style={{ color: '#dc2626', marginTop: 8 }}>
-            {readError}
-          </p>
+          <div className="alert alert-error" role="alert">
+            <strong>Couldn't read that file.</strong>&nbsp;{readError}
+          </div>
         )}
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <h2 style={{ margin: 0, fontSize: 18 }}>Raw data preview</h2>
-          <button onClick={resetUpload} style={secondaryButtonStyle}>
+    <div className="stack" style={{ gap: '1.5rem' }}>
+      <section className="card card-pad">
+        <div className="row-between">
+          <h2 style={{ fontSize: 18, fontFamily: 'var(--font-display)' }}>
+            Raw data preview
+          </h2>
+          <button onClick={resetUpload} className="btn btn-secondary">
             Start over
           </button>
         </div>
-        <div style={{ marginTop: 8 }}>
-          <RawPreviewTable headers={headers} rows={rawRows} />
+        <div style={{ marginTop: 12 }}>
+          <div className="table-scroll">
+            <RawPreviewTable headers={headers} rows={rawRows} />
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div>
-        <h2 style={{ margin: 0, fontSize: 18 }}>Column mapping</h2>
-        <div style={{ marginTop: 8 }}>
-          <ColumnMappingTable
-            headers={headers}
-            mapping={mapping!}
-            unmatchedColumns={unmatchedColumns}
-            onChange={setMapping}
-          />
+      <section className="card card-pad">
+        <div className="section-heading">
+          <h2 style={{ fontFamily: 'var(--font-display)' }}>Column mapping</h2>
+          {unmatchedColumns.length > 0 && (
+            <span className="badge badge-amber">
+              {unmatchedColumns.length} unmatched
+            </span>
+          )}
         </div>
-      </div>
+        <ColumnMappingTable
+          headers={headers}
+          mapping={mapping!}
+          unmatchedColumns={unmatchedColumns}
+          onChange={setMapping}
+        />
+      </section>
 
-      <button
-        onClick={confirmMapping}
-        disabled={!mapping?.subjectCode || !mapping?.scheduleString}
-        style={primaryButtonStyle}
-      >
-        Generate schedule
-      </button>
-      {(!mapping?.subjectCode || !mapping?.scheduleString) && (
-        <p style={{ color: '#64748b', fontSize: 13, marginTop: -8 }}>
-          Subject Code and Schedule must be mapped to continue.
-        </p>
-      )}
+      <div className="stack" style={{ gap: '0.5rem' }}>
+        <button
+          onClick={confirmMapping}
+          disabled={!canGenerate}
+          className="btn btn-primary"
+          style={{ alignSelf: 'flex-start' }}
+        >
+          Generate schedule
+        </button>
+        {!canGenerate && (
+          <p className="section-hint">
+            Subject Code and Schedule must be mapped to continue.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
-
-const primaryButtonStyle = {
-  background: '#6366f1',
-  color: 'white',
-  border: 'none',
-  borderRadius: 8,
-  padding: '0.6rem 1.2rem',
-  fontWeight: 600,
-  cursor: 'pointer',
-  alignSelf: 'flex-start' as const,
-};
-
-const secondaryButtonStyle = {
-  background: 'transparent',
-  color: '#64748b',
-  border: '1px solid #cbd5e1',
-  borderRadius: 8,
-  padding: '0.4rem 0.9rem',
-  cursor: 'pointer',
-};
