@@ -6,7 +6,7 @@ import type {
   ParsedClass,
   RawRow,
 } from '@/types';
-import { guessColumnMapping } from './headerAliasing';
+import { findHeaderRow } from './headerAliasing';
 import { parseScheduleString } from './scheduleStringParser';
 import { colorForSubject } from './colors';
 
@@ -33,17 +33,23 @@ export async function readWorkbook(file: File): Promise<FileReadResult> {
     return { headers: [], rawRows: [], mapping: {} as ColumnMapping, unmatchedColumns: [] };
   }
 
-  const headers = (rows[0] as unknown[]).map((h) => String(h ?? '').trim());
-  const rawRows: RawRow[] = rows.slice(1).map((row) => {
+  const { rowIndex: headerRowIndex, mapping, unmatchedColumns } = findHeaderRow(rows);
+  const headers = ((rows[headerRowIndex] as unknown[]) ?? []).map((h) => String(h ?? '').trim());
+
+  const rawRows: RawRow[] = rows.slice(headerRowIndex + 1).map((row) => {
     const obj: RawRow = {};
     headers.forEach((h, i) => {
       const cell = (row as unknown[])[i];
-      obj[h] = cell === undefined || cell === null ? undefined : cell;
+      if (cell === undefined || cell === null || cell === '') {
+        obj[h] = undefined;
+      } else if (typeof cell === 'string' || typeof cell === 'number') {
+        obj[h] = cell;
+      } else {
+        obj[h] = String(cell);
+      }
     });
     return obj;
   });
-
-  const { mapping, unmatchedColumns } = guessColumnMapping(headers);
 
   return { headers, rawRows, mapping, unmatchedColumns };
 }

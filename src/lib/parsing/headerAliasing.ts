@@ -118,3 +118,64 @@ export function guessColumnMapping(headers: string[]): {
 export function isMappingEmpty(mapping: ColumnMapping): boolean {
   return REQUIRED_FIELDS.every((f) => !mapping[f]);
 }
+
+export interface HeaderRowGuess {
+  rowIndex: number;
+  mapping: ColumnMapping;
+  unmatchedColumns: string[];
+  score: number;
+}
+
+const HEADER_SEARCH_WINDOW = 25;
+const MIN_POPULATED_CELLS_FOR_HEADER_CANDIDATE = 2;
+
+/**
+ * Scans the first HEADER_SEARCH_WINDOW rows and returns whichever one is
+ * most likely to be the real header row, using the exact same
+ * synonym/fuzzy matching as guessColumnMapping — no format-specific
+ * assumptions. Handles letterhead/title rows above the real table
+ * (common in registrar/SIS exports) generically: a title row like
+ * "Camarines Norte State College" matches none of our field synonyms
+ * and scores 0, so it loses to the real header row regardless of how
+ * many rows separate them.
+ */
+export function findHeaderRow(rows: unknown[][]): HeaderRowGuess {
+  let best: HeaderRowGuess = {
+    rowIndex: 0,
+    mapping: {} as ColumnMapping,
+    unmatchedColumns: [],
+    score: -1,
+  };
+
+  const searchLimit = Math.min(rows.length, HEADER_SEARCH_WINDOW);
+
+  for (let i = 0; i < searchLimit; i++) {
+    const candidate = ((rows[i] as unknown[]) ?? []).map((h) => String(h ?? '').trim());
+
+    // A lone populated cell (typical of a title row) can't be a real
+    // multi-column header — skip it before even scoring.
+    const populatedCount = candidate.filter((c) => c !== '').length;
+    if (populatedCount < MIN_POPULATED_CELLS_FOR_HEADER_CANDIDATE) continue;
+
+    const { mapping, unmatchedColumns } = guessColumnMapping(candidate);
+    const score = REQUIRED_FIELDS.reduce(
+      (acc, field) => acc + (mapping[field] ? 1 : 0),
+      0,
+    );
+
+    if (score > best.score) {
+      best = { rowIndex: i, mapping, unmatchedColumns, score };
+    }
+  }
+
+  // Nothing in the window resolved even one field — fall back to row 0,
+  // same as legacy behavior. isMappingEmpty() will trigger the manual
+  // mapping UI from here, same as it always did for an unrecognizable file.
+  if (best.score <= 0) {
+    const fallback = ((rows[0] as unknown[]) ?? []).map((h) => String(h ?? '').trim());
+    const { mapping, unmatchedColumns } = guessColumnMapping(fallback);
+    return { rowIndex: 0, mapping, unmatchedColumns, score: 0 };
+  }
+
+  return best;
+}

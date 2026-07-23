@@ -213,6 +213,58 @@ Dated, append-only record of what actually happened: code added, bugs
 fixed, decisions made. The phase tables above show current status only;
 this is the history. Newest entry on top.
 
+### 2026-07-23 — Header-row detection fix (`lib/parsing/parseFile.ts`, `lib/parsing/headerAliasing.ts`)
+
+**Fixed:**
+- `readWorkbook` in `parseFile.ts` assumed the sheet's row 0 was always
+  the header row. Real-world exports commonly have letterhead/title
+  rows above the actual table — confirmed against a real sample file
+  (a registrar "Enrolled Subjects" printout), where the true header
+  (`Class, Subj Code, Description, Units, Schedule, Instructor,
+  Section`) sits 4 rows below a college-name/address title block. With
+  the old code, `guessColumnMapping` had nothing to match against that
+  title row, so every data row failed to parse ("Missing subject code"
+  / "Missing schedule string") even though the file was well-formed.
+- A TS narrowing bug in the same function:
+  `cell === undefined || cell === null ? undefined : cell` doesn't
+  narrow `unknown` the way it narrows a real union — the false branch
+  typed as `{}` instead of `string | number | undefined`, tripping
+  ts(2322). Replaced with an explicit `typeof` check.
+
+**Added:**
+- `findHeaderRow()` in `headerAliasing.ts` — scans the first 25 rows,
+  runs the existing synonym/fuzzy `guessColumnMapping` against each one
+  as a header candidate, and picks whichever row resolves the most
+  `REQUIRED_FIELDS`. Skips candidate rows with fewer than 2 populated
+  cells first (title rows are typically single-cell), so a stray
+  one-word title can't outscore the real header. Falls back to row 0
+  (old behavior) if nothing in the window matches anything, so
+  `isMappingEmpty`'s manual-mapping UI still kicks in for genuinely
+  unrecognizable files. No new matching logic — reuses
+  `guessColumnMapping` as-is, so it generalizes to any header wording
+  the synonym table already understands, not just this one sample file.
+- `readWorkbook` now calls `findHeaderRow` instead of assuming
+  `rows[0]`, and slices `rawRows` starting after the detected header
+  row instead of always `rows.slice(1)`.
+
+**Known gaps / deferred, not bugs:**
+- Search window capped at 25 rows — comfortably covers any
+  letterhead-style export seen so far; would need raising only if a
+  file has an unusually long preamble.
+- Doesn't handle multi-row spanning headers (e.g. a merged header cell
+  sitting over two sub-columns). Not a known real-world need yet.
+- `ParseIssue.rowIndex` / `ParsedClass.sourceRowIndex` are still
+  positions within `rawRows` (relative to the detected header row), not
+  the literal Excel row number. Fine for now since nothing surfaces raw
+  Excel row numbers to the user yet, but worth revisiting if
+  `ParseReportPanel` ever needs to point someone back to a specific row
+  in their original file.
+- Verified by re-running the real sample xlsx through the equivalent
+  parsing logic standalone (Node script reproducing `findHeaderRow` +
+  `readWorkbook`), not through the actual Vite app build — same
+  sandbox network restriction noted in earlier entries (`npm install`
+  still hasn't been run against the real project).
+
 ### 2026-07-23 — Upload UI polish (FileDropzone, ParseReportPanel, RawPreviewTable, ColumnMappingTable)
 
 **Changed** (presentation-only, no prop/type changes):
