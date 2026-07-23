@@ -70,7 +70,10 @@ body {
   background-attachment: fixed;
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-family: var(--font-display);
   font-weight: 600;
   color: var(--ink-900);
@@ -78,7 +81,8 @@ h1, h2, h3, h4 {
   letter-spacing: -0.01em;
 }
 
-code, .mono {
+code,
+.mono {
   font-family: var(--font-mono);
 }
 
@@ -281,10 +285,25 @@ a {
   padding: 0.2rem 0.6rem;
 }
 
-.badge-amber { background: var(--amber-tint); color: var(--amber-deep); }
-.badge-teal  { background: var(--teal-tint);  color: var(--teal); }
-.badge-rose  { background: var(--rose-tint);  color: var(--rose); }
-.badge-sage  { background: var(--sage-tint);  color: var(--sage); }
+.badge-amber {
+  background: var(--amber-tint);
+  color: var(--amber-deep);
+}
+
+.badge-teal {
+  background: var(--teal-tint);
+  color: var(--teal);
+}
+
+.badge-rose {
+  background: var(--rose-tint);
+  color: var(--rose);
+}
+
+.badge-sage {
+  background: var(--sage-tint);
+  color: var(--sage);
+}
 
 .alert {
   border-radius: var(--radius-md);
@@ -398,6 +417,12 @@ a {
 .weekly-grid {
   display: flex;
   overflow-x: auto;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+  background-attachment: fixed;
 }
 
 .weekly-grid__empty {
@@ -475,13 +500,11 @@ a {
 .day-column__track {
   position: relative;
   /* border-left: 1px solid var(--line); */
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 59px,
-    var(--paper) 59px,
-    var(--paper) 60px
-  );
+  background: repeating-linear-gradient(to bottom,
+      transparent,
+      transparent 59px,
+      var(--paper) 59px,
+      var(--paper) 60px);
 }
 
 .now-line {

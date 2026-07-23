@@ -14,7 +14,6 @@ export function ExportPngButton({ targetRef, disabled }: ExportPngButtonProps) {
 
     const handleExport = useCallback(async () => {
         if (!targetRef.current) return;
-        console.log('Exporting grid as PNG…');
         setStatus('exporting');
         try {
             await exportGridAsPng(targetRef.current);

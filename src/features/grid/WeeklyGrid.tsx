@@ -7,7 +7,8 @@ import { GridBlock } from './GridBlock';
 const ALL_DAYS: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DEFAULT_DAYS: DayOfWeek[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 const PX_PER_MINUTE = 1;
-const HOUR_BUFFER = 60; // minutes of padding shown before/after the earliest/latest class
+const DEFAULT_RANGE_START = 8 * 60; // 8:00 AM
+const DEFAULT_RANGE_END = 16 * 60; // 4:00 PM
 
 interface WeeklyGridProps {
   classes: ParsedClass[];
@@ -42,12 +43,25 @@ export const WeeklyGrid = forwardRef<HTMLDivElement, WeeklyGridProps>(
       const days = ALL_DAYS.filter((d) =>
         daysWithSessions.size > 0 ? daysWithSessions.has(d) : DEFAULT_DAYS.includes(d),
       );
+      // Start defaults to 8am. Only move earlier if a class starts
+      // before that — and only as far as that class actually needs,
+      // rounded down to the hour (7:30 -> 7:00, 7:00 -> 7:00, no
+      // added padding). A class starting after 8am doesn't push the
+      // default later.
       const start = Number.isFinite(minStart)
-        ? Math.max(0, Math.floor((minStart - HOUR_BUFFER) / 60) * 60)
-        : 7 * 60;
+        ? minStart < DEFAULT_RANGE_START
+          ? Math.max(0, Math.floor(minStart / 60) * 60)
+          : DEFAULT_RANGE_START
+        : DEFAULT_RANGE_START;
+      // End defaults to 4pm. Only move later if a class ends after
+      // that — and only as far as needed, rounded up to the hour
+      // (5:30 -> 6:00, 5:00 -> 5:00, no added padding). A class
+      // ending before 4pm doesn't pull the default earlier.
       const end = Number.isFinite(maxEnd)
-        ? Math.min(24 * 60, Math.ceil((maxEnd + HOUR_BUFFER) / 60) * 60)
-        : 21 * 60;
+        ? maxEnd > DEFAULT_RANGE_END
+          ? Math.min(24 * 60, Math.ceil(maxEnd / 60) * 60)
+          : DEFAULT_RANGE_END
+        : DEFAULT_RANGE_END;
       return {
         visibleDays: days.length > 0 ? days : DEFAULT_DAYS,
         rangeStart: start,
