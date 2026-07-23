@@ -5,6 +5,7 @@ Rule followed throughout: **a phase can only depend on an earlier phase, never a
 Status values used below: Not Started, In Progress, Done, Blocked.
 
 **Current status: Phases 0–1 done. Phases 2–8 not started.** See the Build
+**Current status: Phases 0–1 done. Phases 2–8 not started.** See the Build
 Log at the bottom of this file for a dated, per-change record of what
 was actually done, including any fixes — the tables below only show
 current status, not history.
@@ -28,6 +29,19 @@ current status, not history.
 
 | Subsection | Status | Notes |
 |---|---|---|
+| Drag-and-drop / file browser upload (.xlsx/.xls) | Done | `features/upload/FileDropzone.tsx` |
+| Auto-detect headers + Smart Header Matching (fuzzy) | Done | `lib/parsing/headerAliasing.ts` — synonym table + Levenshtein fallback (`lib/parsing/levenshtein.ts`) |
+| Manual column override + fallback manual mapping mode | Done | `features/upload/ColumnMappingTable.tsx` — shows the fallback-mode banner via `isMappingEmpty` when nothing auto-matched |
+| Raw data preview table | Done | `features/upload/RawPreviewTable.tsx` |
+| Messy schedule-string parser (time/day/room extraction) | Done | `lib/parsing/scheduleStringParser.ts` — single source of truth, nothing outside `lib/parsing` re-implements it |
+| Multi-session class splitting, 24h time standardization | Done | Same file — comma/semicolon segments + multi-day tokens each become their own `ClassSession`; `lib/parsing/timeUtils.ts` handles 24h conversion |
+| Time conflict detection + back-to-back room distance warning | Done | `lib/parsing/conflicts.ts`; overlaps render red on the grid (`features/grid/GridBlock.tsx`), room-distance warnings surface in `features/grid/ConflictsPanel.tsx` |
+| Duplicate subject detection | Done | Also in `lib/parsing/conflicts.ts`, surfaced in `ConflictsPanel.tsx` |
+| Parsing report + success-rate indicator + auto-suggest fixes | Done | `features/upload/ParseReportPanel.tsx` + per-issue `suggestion` field from the parser |
+| Weekly grid rendering (Mon–Sun × hourly slots) | Done | `features/grid/WeeklyGrid.tsx` — only shows days that actually have classes, falls back to Mon–Fri |
+| Smart color assignment (OKLCH/HSL, consistent per subject) | Done | `lib/parsing/colors.ts` — deterministic hash → hue, golden-angle spacing; colorblind-safe palette function included but not yet wired to a UI toggle (that's Phase 4) |
+| Live "current time" indicator, day summary tooltip | Done | `hooks/useCurrentTime.ts` + `WeeklyGrid.tsx` (red line + hover tooltip on day header) |
+| LocalStorage autosave + crash recovery (local) | Done | `store/index.ts` — Zustand `persist` middleware, autosaves on every state change, rehydrates on reload |
 | Drag-and-drop / file browser upload (.xlsx/.xls) | Done | `features/upload/FileDropzone.tsx` |
 | Auto-detect headers + Smart Header Matching (fuzzy) | Done | `lib/parsing/headerAliasing.ts` — synonym table + Levenshtein fallback (`lib/parsing/levenshtein.ts`) |
 | Manual column override + fallback manual mapping mode | Done | `features/upload/ColumnMappingTable.tsx` — shows the fallback-mode banner via `isMappingEmpty` when nothing auto-matched |
@@ -144,6 +158,9 @@ current status, not history.
 Folders below are annotated with the phase that first populates them, so
 this doubles as a build-order map. Phases 0 and 1 are done — see the
 Build Log for exactly which files landed in each.
+Folders below are annotated with the phase that first populates them, so
+this doubles as a build-order map. Phases 0 and 1 are done — see the
+Build Log for exactly which files landed in each.
 
 ```
 timetable-orchestrator/
@@ -151,22 +168,30 @@ timetable-orchestrator/
 │   ├── features/
 │   │   ├── upload/         # Phase 1 — done (FileDropzone, ColumnMappingTable, RawPreviewTable, ParseReportPanel, UploadFlow)
 │   │   ├── grid/            # Phase 1 — done (WeeklyGrid, GridBlock, ConflictsPanel)
+│   │   ├── upload/         # Phase 1 — done (FileDropzone, ColumnMappingTable, RawPreviewTable, ParseReportPanel, UploadFlow)
+│   │   ├── grid/            # Phase 1 — done (WeeklyGrid, GridBlock, ConflictsPanel)
 │   │   ├── analytics/       # Phase 3 — folder created, empty
 │   │   ├── export/          # Phase 5 — folder created, empty
 │   │   ├── sharing/         # Phase 7 — folder created, empty
 │   │   └── auth/            # Phase 6 — folder created, empty
 │   ├── store/                # Phase 0 skeleton → Phase 1 added scheduleSlice.ts + persist middleware → Phases 2, 6 add more slices
+│   ├── store/                # Phase 0 skeleton → Phase 1 added scheduleSlice.ts + persist middleware → Phases 2, 6 add more slices
 │   ├── lib/
 │   │   ├── supabase/         # Phase 6 — folder created, empty
+│   │   ├── parsing/          # Phase 1 — done (headerAliasing, scheduleStringParser, conflicts, colors, parseFile, timeUtils, levenshtein)
 │   │   ├── parsing/          # Phase 1 — done (headerAliasing, scheduleStringParser, conflicts, colors, parseFile, timeUtils, levenshtein)
 │   │   ├── export/           # Phase 5 — folder created, empty
 │   │   └── nlp/              # Phase 8 — folder created, empty
 │   ├── hooks/                # Phase 1 — useCurrentTime.ts
 │   ├── types/                # Phase 0 base types → Phase 1 added the full parsing/grid data model
 │   └── pages/                # Phase 1 — HomePage.tsx (main view) → extended in Phase 7 (public view)
+│   ├── hooks/                # Phase 1 — useCurrentTime.ts
+│   ├── types/                # Phase 0 base types → Phase 1 added the full parsing/grid data model
+│   └── pages/                # Phase 1 — HomePage.tsx (main view) → extended in Phase 7 (public view)
 ├── supabase/
 │   ├── migrations/           # Phase 6 — folder created, empty
 │   └── functions/            # Not planned unless a future feature needs a real secret — see dev plan §10
+└── package.json               # Phase 0 scaffold, Phase 1 added `xlsx` — done, unverified (see Build Log)
 └── package.json               # Phase 0 scaffold, Phase 1 added `xlsx` — done, unverified (see Build Log)
 ```
 
